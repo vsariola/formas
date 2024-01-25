@@ -1,0 +1,18 @@
+This intro uses the brotli compression technique so needs the web-server to be
+configured properly i.e. to serve the file with
+  a) content-type as "text/html"; and
+  b) content-encoding as "br"
+
+Some servers are already configured to serve .htm.br this way, but included in
+the package is two mini servers, one for node and one for python3, that you can
+use to serve the file. Just run:
+
+node node-server.js
+	OR
+python python-server.py
+
+And then open your browser to:
+
+http://localhost:1337
+
+Please use Chrome or Edge, Firefox seems to have issues with garbage collection.

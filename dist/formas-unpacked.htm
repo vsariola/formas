@@ -1,0 +1,105 @@
+click<canvas id=c>
+  <script>
+    onclick = d => {
+      b = c.getContext`2d`;
+      min = Math.min; // Brotli weirdness: math.min is only used once, but it still makes sense to alias it ¯\_(ツ)_/¯
+      sin = Math.sin;
+      P = Math.PI;
+      A = new AudioContext;
+      d = A.createScriptProcessor(2048, onclick = delayIndex = t = 0, 2); // stereo audio, because we're worth it
+      filt = [0, 0, 0, 0];
+      d.connect(A.destination);
+      d.onaudioprocess = d => {
+        c.width = 1920; // setting canvas size also resets it
+        c.height = 1080;
+
+        for (var i = 0; i < 2048; i++) {
+          part = t >> 4;
+          for (j = 2; j--; t += 3 / 5 / A.sampleRate) {
+            x = A[++delayIndex] / 2 || 0; // pull value from delay buffer, or 0 if it's empty
+            M = sin(2 * sin(P * min((t + sin(part) * 5 * j) / 150, 1))); // master volume / fade / filter cutoff etc. slightly different for left and right channel for stereo widening
+            for (k = 5; k-- && t < 145; chord = '1111110311113334'[t & 7 | t % 128 / 10 & 8] | 0) { // loop over 5 channels
+              // n is the note number
+              n = '0101010141641541100010320010001010101010'[k * 8 | t * '48144'[k] % 8] // patterns for each channel: channel 0 = reverse bass, channel 1 = arpeggio, channel 2 = slow instrument, channel 3 = snare, channel 4 = kick
+                * '01111111111101111100001111111100001111100011101111'[k * 10 + part]; // controls which channels are active
+              p = t * '48144'[k] % 1; // position within the row. the five channels play notes at different speeds
+              // calculating the envelope:
+              // "n &&" checks that n is not 0 (silence)
+              // "-.002 / p" controls attack of the envelope
+              //  "!k" boosts the bass channel (channel 0) instrument over other instruments
+              // "(1-p)**" is the decay part of the envelope
+              // "(k < 4 && 1 - M)" for all other instruments than kick, the decay is longer / the envelope is more flat when M is larger. this was added to make the arpeggio "blurrier" when it starts again after the one pause
+              b[k] = n && 3 ** (-.002 / p + !k) * (1 - p) ** (.9 + (k < 4 && 1 - M));
+              x += k < 4 && b[k] * ( // the last instrument 4 is the kick, we just compute the envelope and p value for it but don't add a sawtooth the sound
+                (
+                  2 ** (
+                    (
+                      (
+                        (9 * n >> 2) // converts from note number to white key numbers of piano. essentially a LUT of [0, 2, 4, 6, 9, 11, 13], where 0 = no note, and the rest are the white keys of two triads, one octave apart
+                        - 1 // first note was 2, this subtracts 1 and the following line adds 1 for the home chord we mostly shift on, so the net shift is 2 from locrian mode = dorian mode, although only the 4 chord reveals the dorianness of the mode; otherwise it could be aeolian
+                        + chord // shift hand left or right on the piano. In dorian mode, 1 = i, 0 = VIb, 3 = IIIb and 4 = IV
+                      ) * 12 / 7 | 0 // 12 /7 | 0 converts from white key numbers to semitones: it's essentially same as LUT of [0, 1, 3, 5, 6, 8, 10, 12,... ]. Those being semitones, that's HALF-FULL-FULL_HALF-FULL-FULL-FULL i.e. locrian mode, but since we start mostly from key 2 of locrian, it's actually in dorian mode
+                    ) / 12 + 8 - !k * 2 // *+8 is the octave, -!k*2 means bass channel (channel 0) is 2 octaves lower
+                  ) * t +  // 2**(...) = frequency, *t time, so their product is the phase
+                  j / 4 +  // phase shift left and right channel, giving a stereo widening
+                  (k == 3 && Math.random()) // add noise to the snare, by adding the noise to the phase
+                ) % 2 - 1                   // saw tooth wave
+              )
+            }
+
+            d.outputBuffer.getChannelData(j)[i] = (
+              A[delayIndex %= A.sampleRate * 5 / 8 | 1] = ( // | 1 forces the delay to be an odd integer, so that right and left channels swap aka ping pong delay
+                filt[j + 2] += 2 * sin(M * 15005 / A.sampleRate) * (filt[j] += 2 * sin(M * 15005 / A.sampleRate) * (x / 5 - filt[j + 2] - filt[j] / 5)) // resonant lowpass filter, equations from https://www.musicdsp.org/en/latest/Filters/23-state-variable.html
+              ) // save the filtered signal into the low pass buffer, so the low pass works as a damping (the echos get progressively more filtered)
+            ) * (1 - b[4] / 2) + // kick ducks everything else
+              b[4] * sin(154 * p ** .3)  // add kick only to output, not the delay buffer
+          }
+        }
+
+        b.font = '700 .5px sans-serif';
+        b.textAlign = 'center';
+        b.fillStyle = 'white';
+        b.translate(1920 / 2, 1080 / 2);
+
+        b.save();
+        b.scale(320 * M + b[4] * 90, 320 * M + b[4] * 90);
+        b.strokeStyle = `hsl(${part * 120},100%,60%`;
+        b.globalAlpha = sin(P * t) ** 2;
+        (x = d => {
+          if (!--d) return; // the logic could be reverse to get rid of return but brotli dictionary has the word "return" so it compresses nicely
+          b.beginPath();
+          b.lineWidth = .004;
+          [
+            d => b.rect(-1000, 0, 2000, 0),
+            d => b.rect(0, -1000, 0, 2000),
+            d => b.fillRect(-2, -.02, 4, .04),
+            d => b.fillRect(-.02, -2, .04, 4),
+            d => b.fillText(['lovebyte 2024', 'formas', '\u2665', '\u2665', '\u2665', '\u2665', 'code: pestis'][part % 7], 0, .2),
+            d => b.arc(0, 0, 1, 0, 8),
+            d => b.rect(-1, -1, 2, 2),
+            d => b.roundRect(-1, -1, 2, 2, .5)
+          ][(part && t) + d * (part % 7 * 7 + chord - 1) & 7](5);
+          b.stroke();
+          p = part % 3 + 2;
+          for (var i = 0; i < p; i++) {
+            b.save();
+            b.rotate(
+              (i + (part % 5 >> 1) * t / 4) * 2 * P / p
+            );
+            b.translate((part % 5 / 2 & 1) * sin(P * t), M);
+            b.scale(.7 + sin(part * d) / 6, .7 + sin(part * d) / 6);
+            b.restore(x(d))
+          }
+        })(5);
+
+        b.restore(x = 1.001);
+        b.globalAlpha = .5;
+        for (var i = 1; i < 9; i++) {
+          b.filter = `blur(${i * 2}px`;
+          b.drawImage(c, -x * 1920 / 2, -x * 1080 / 2, x * 1920, x * 1080);
+          x *= x
+        }
+        c.style = `position: fixed;top:0px;left:0px; height:100%;width:100%; background:repeating-${part & 1 ? "conic-gradient(from " : "linear-gradient("}${part * t * 15}deg,black 0,hsl(0,0%,${sin(P * t) ** 2 * M * 15}%) 5%,black 10%); filter:invert(${b[3]}`
+      }
+    }
+  </script>
