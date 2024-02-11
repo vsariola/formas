@@ -4,6 +4,8 @@ A javscript 1k intro by pestis, released at LoveByte 2024.
 
 Source: https://github.com/vsariola/formas
 
+Capture: https://www.youtube.com/watch?v=9YunjBxz-AQ
+
 ## Packing
 
 `node watch-packer-server.js`
