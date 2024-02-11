@@ -6,6 +6,20 @@ Source: https://github.com/vsariola/formas
 
 Capture: https://www.youtube.com/watch?v=9YunjBxz-AQ
 
+Greets: p01 !!!!!! This intro is basically just built on the scaffoling of EXPI,
+so thank you <3 <3 <3! And then: superogue, HellMood, psenough, jeenio, gopher,
+jobe, Virgill, nesbox, dave84, TomCat, exoticorn, baze, byteobserver, ferris,
+Ped7g, Dresdenboy, okkie, Řrřola, aldroid, hannu, wrighter, sensenstahl, unlord,
+noby, LJ, PoroCYon, Blossom, deater, ilmenit, Fready, Jin X, havoc, gasman,
+DevEd, bitl, wbcbz7, NR4, Pellicus, GoingDigital, teadrinker, las, mentor,
+blueberry, pOWL, fizzer, gargaj, silvia, MartiniMoe, & everyone at the
+Sizecoding discord!
+
+Use Edge or Chrome.
+
+Techniques: Canvas, WebAudioAPI, Brotli, Custom parser/packer, dollchan
+bytebeat, IFS fractals, more attitude than skills.
+
 ## Packing
 
 `node watch-packer-server.js`
